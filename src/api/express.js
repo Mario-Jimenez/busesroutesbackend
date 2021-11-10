@@ -1,12 +1,26 @@
 const express = require('express');
+const roadRouter = require('./road');
 
-const app = express();
-const port = 3000;
+class ExpressServer {
+  constructor(config) {
+    this.log = config.log;
+    this.port = config.port;
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
-});
+    this.app = express();
+    this.app.use('/road', roadRouter(this.log, config.roadController));
+  }
 
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`);
-});
+  run() {
+    this.server = this.app.listen(this.port, () => {
+      this.log.info({ port: this.port }, 'Running server...');
+    });
+  }
+
+  async shutdown() {
+    this.server.close(() => {
+      this.log.info('Server exiting');
+    });
+  }
+}
+
+module.exports = ExpressServer;

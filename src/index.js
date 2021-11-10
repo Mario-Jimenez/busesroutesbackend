@@ -1,38 +1,59 @@
+require('dotenv').config();
 const { EventEmitter } = require('events');
-const { getLogger } = require('./logger/log');
+const ExpressServer = require('./api/express');
+const { getLogger, initializeLogger } = require('./logger/log');
+const RoadController = require('./road/road');
 const PostgreSQLDatabase = require('./storage/postgresql');
+const RoadStorage = require('./storage/road');
 
-const main = () => {
+const main = async () => {
+  await initializeLogger('buses-routes', '0.1.0');
+  const log = getLogger();
+
   const databaseConfig = {
-    // maximum number of clients the pool should contain
-    // by default this is set to 10.
     max: 20,
-    // number of milliseconds a client must sit idle in the pool and not be checked out
-    // before it is disconnected from the backend and discarded
-    // default is 10000 (10 seconds) - set to 0 to disable auto-disconnection of idle clients
     idleTimeoutMillis: 30000,
-    // number of milliseconds to wait before timing out when connecting a new client
-    // by default this is 0 which means no timeout
     connectionTimeoutMillis: 5000,
   };
-
   const appEventEmitter = new EventEmitter();
-  const log = getLogger();
   const postgresqlDatabase = new PostgreSQLDatabase(
     databaseConfig,
     appEventEmitter
   );
 
-  appEventEmitter.on('postgresqlErrors', (err) => {
-    log.error(
-      {
-        err,
-      },
-      'PostgreSQL error'
-    );
+  const roadStorage = new RoadStorage(postgresqlDatabase.connection());
+  const roadController = new RoadController({
+    log,
+    roadStorage,
   });
 
-  postgresqlDatabase.close();
+  const config = {
+    log,
+    port: process.env.PORT,
+    roadController,
+  };
+
+  const server = new ExpressServer(config);
+
+  appEventEmitter.on('postgresqlErrors', (err) => {
+    log.error({ err }, 'PostgreSQL error');
+  });
+
+  process.on('SIGINT', async () => {
+    await server.shutdown();
+    await postgresqlDatabase.close();
+    log.info('Process terminated');
+    process.exit(0);
+  });
+
+  process.on('SIGTERM', async () => {
+    await server.shutdown();
+    await postgresqlDatabase.close();
+    log.info('Process terminated');
+    process.exit(0);
+  });
+
+  server.run();
 };
 
 main();

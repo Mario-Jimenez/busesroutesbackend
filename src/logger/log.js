@@ -35,7 +35,8 @@ const initializeLogger = async (serviceName, serviceVersion) => {
     serviceName,
     serviceVersion,
     src: true,
-    level: process.env.LOG_LEVEL.toLowerCase() || 'debug',
+    level:
+      (process.env.LOG_LEVEL && process.env.LOG_LEVEL.toLowerCase()) || 'debug',
     serializers: { err: bunyan.stdSerializers.err },
     streams: loggerStreams,
   });
