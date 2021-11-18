@@ -1,5 +1,8 @@
 const express = require('express');
+const cors = require('cors');
 const roadRouter = require('./road');
+const busStopRouter = require('./busstop');
+const busRouteRouter = require('./busroute');
 
 class ExpressServer {
   constructor(config) {
@@ -7,7 +10,16 @@ class ExpressServer {
     this.port = config.port;
 
     this.app = express();
+    this.app.use(cors());
     this.app.use('/road', roadRouter(this.log, config.roadController));
+    this.app.use(
+      '/bus/stop',
+      busStopRouter(this.log, config.busStopController)
+    );
+    this.app.use(
+      '/bus/route',
+      busRouteRouter(this.log, config.busRouteController)
+    );
   }
 
   run() {

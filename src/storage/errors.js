@@ -6,27 +6,6 @@ class StorageError extends Error {
   }
 }
 
-class StorageDuplicatedDNIError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = this.constructor.name;
-  }
-}
-
-class StorageDuplicatedUsernameError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = this.constructor.name;
-  }
-}
-
-class StorageDuplicatedEmailError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = this.constructor.name;
-  }
-}
-
 class StorageNotFoundError extends Error {
   constructor(message) {
     super(message);
@@ -36,8 +15,5 @@ class StorageNotFoundError extends Error {
 
 module.exports = {
   StorageError,
-  StorageDuplicatedDNIError,
-  StorageDuplicatedUsernameError,
-  StorageDuplicatedEmailError,
   StorageNotFoundError,
 };
